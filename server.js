@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+const db = require('./db');
 
 const authRoutes = require('./routes/auth');
 const modulesRoutes = require('./routes/modules');
@@ -14,6 +16,18 @@ const announcementsRoutes = require('./routes/announcements');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+async function initDB() {
+  try {
+    const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
+    await db.query(schema);
+    // Add section column if missing (for module tab separation)
+    await db.query(`ALTER TABLE modules ADD COLUMN IF NOT EXISTS section VARCHAR(20) DEFAULT 'modules'`);
+    console.log('✅ Database schema ready');
+  } catch (err) {
+    console.error('DB init error:', err.message);
+  }
+}
 
 app.use(cors({
   origin: process.env.CLIENT_URL || '*',
@@ -52,6 +66,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`LearnFlow backend running on port ${PORT}`);
+initDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`LearnFlow backend running on port ${PORT}`);
+  });
 });
