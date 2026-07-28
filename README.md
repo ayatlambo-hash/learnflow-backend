@@ -27,6 +27,35 @@ npm run dev   # development with nodemon
 npm start     # production
 ```
 
+## Deployment (Render — free tier)
+
+### 1. Create free PostgreSQL database on Neon
+- Go to https://neon.tech and sign up
+- Create a new project → copy the connection string
+- The connection string looks like: `postgresql://user:password@host.neon.tech/learnflow?sslmode=require`
+
+### 2. Deploy backend on Render
+- Go to https://render.com and sign up
+- Click **New +** → **Web Service**
+- Connect your GitHub repo: `ayatlambo-hash/learnflow-backend`
+- Render will detect `render.yaml` and use these settings:
+  - **Name**: `learnflow-backend`
+  - **Runtime**: Node
+  - **Plan**: Free
+  - **Build Command**: `npm install`
+  - **Start Command**: `npm start`
+- Add environment variables in Render dashboard:
+  - `DATABASE_URL` = your Neon connection string
+  - `JWT_SECRET` = any long random string (min 32 chars)
+  - `INSTRUCTOR_CODE` = `teacher2024`
+- Click **Deploy**
+- After deployment, copy your Render URL (e.g. `https://learnflow-backend.onrender.com`)
+
+### 3. Update frontend API URL
+- In your frontend repo, edit `src/api/client.js` or `.env.production`
+- Set `REACT_APP_API_URL=https://learnflow-backend.onrender.com/api`
+- Commit and push → Netlify will redeploy automatically
+
 ## Deployment (Railway)
 1. Create new Railway project
 2. Add PostgreSQL plugin → copy DATABASE_URL
