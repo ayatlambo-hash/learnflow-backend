@@ -47,7 +47,7 @@ npm start     # production
 - Add environment variables in Render dashboard:
   - `DATABASE_URL` = your Neon connection string
   - `JWT_SECRET` = any long random string (min 32 chars)
-  - `INSTRUCTOR_CODE` = `teacher2024`
+  - `INSTRUCTOR_CODE` = `teacher2026`
 - Click **Deploy**
 - After deployment, copy your Render URL (e.g. `https://learnflow-backend.onrender.com`)
 
