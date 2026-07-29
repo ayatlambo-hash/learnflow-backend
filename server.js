@@ -66,8 +66,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-initDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`LearnFlow backend running on port ${PORT}`);
-  });
+app.listen(PORT, () => {
+  console.log(`LearnFlow backend running on port ${PORT}`);
 });
+
+initDB();
