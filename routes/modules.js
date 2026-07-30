@@ -153,6 +153,17 @@ router.delete('/:id/lessons/:lessonId', auth, instructorOnly, async (req, res) =
   }
 });
 
+// DELETE /api/modules/lessons/all - delete ALL lessons (instructor only, dangerous)
+router.delete('/lessons/all', auth, instructorOnly, async (req, res) => {
+  try {
+    await db.query('DELETE FROM lessons');
+    res.json({ success: true, message: 'All lessons deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // PATCH /api/modules/lessons/:lessonId - partial update (URL, duration, deadline)
 router.patch('/lessons/:lessonId', auth, instructorOnly, async (req, res) => {
   try {
