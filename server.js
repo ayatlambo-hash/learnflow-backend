@@ -23,6 +23,8 @@ async function initDB() {
     await db.query(schema);
     // Add section column if missing (for module tab separation)
     await db.query(`ALTER TABLE modules ADD COLUMN IF NOT EXISTS section VARCHAR(20) DEFAULT 'modules'`);
+    // Add instructions column if missing (for task instructions)
+    await db.query(`ALTER TABLE lessons ADD COLUMN IF NOT EXISTS instructions TEXT`);
     console.log('✅ Database schema ready');
   } catch (err) {
     console.error('DB init error:', err.message);
