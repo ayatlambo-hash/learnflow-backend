@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS lessons (
   duration VARCHAR(20),
   pages VARCHAR(20),
   deadline DATE,
+  instructions TEXT,
   order_index INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );

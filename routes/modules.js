@@ -115,11 +115,11 @@ router.get('/:id/lessons', auth, async (req, res) => {
 // POST /api/modules/:id/lessons - create lesson
 router.post('/:id/lessons', auth, instructorOnly, async (req, res) => {
   try {
-    const { title, type, video_url, form_url, content, duration, pages, deadline, order_index } = req.body;
+    const { title, type, video_url, form_url, content, duration, pages, deadline, instructions, order_index } = req.body;
     if (!title) return res.status(400).json({ error: 'Title required' });
     const result = await db.query(
-      'INSERT INTO lessons (module_id, title, type, video_url, form_url, content, duration, pages, deadline, order_index) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *',
-      [req.params.id, title, type || 'video', video_url || null, form_url || null, content || null, duration || null, pages || null, deadline || null, order_index ?? 0]
+      'INSERT INTO lessons (module_id, title, type, video_url, form_url, content, duration, pages, deadline, instructions, order_index) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *',
+      [req.params.id, title, type || 'video', video_url || null, form_url || null, content || null, duration || null, pages || null, deadline || null, instructions || null, order_index ?? 0]
     );
     res.status(201).json({ ...result.rows[0], done: false, score: null });
   } catch (err) {
@@ -131,10 +131,10 @@ router.post('/:id/lessons', auth, instructorOnly, async (req, res) => {
 // PUT /api/modules/:id/lessons/:lessonId - update lesson
 router.put('/:id/lessons/:lessonId', auth, instructorOnly, async (req, res) => {
   try {
-    const { title, type, video_url, form_url, content, duration, pages, deadline } = req.body;
+    const { title, type, video_url, form_url, content, duration, pages, deadline, instructions } = req.body;
     const result = await db.query(
-      'UPDATE lessons SET title=$1, type=$2, video_url=$3, form_url=$4, content=$5, duration=$6, pages=$7, deadline=$8 WHERE id=$9 AND module_id=$10 RETURNING *',
-      [title, type, video_url, form_url, content, duration, pages, deadline, req.params.lessonId, req.params.id]
+      'UPDATE lessons SET title=$1, type=$2, video_url=$3, form_url=$4, content=$5, duration=$6, pages=$7, deadline=$8, instructions=$9 WHERE id=$10 AND module_id=$11 RETURNING *',
+      [title, type, video_url, form_url, content, duration, pages, deadline, instructions || null, req.params.lessonId, req.params.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(result.rows[0]);
@@ -167,14 +167,15 @@ router.delete('/lessons/all', auth, instructorOnly, async (req, res) => {
 // PATCH /api/modules/lessons/:lessonId - partial update (URL, duration, deadline)
 router.patch('/lessons/:lessonId', auth, instructorOnly, async (req, res) => {
   try {
-    const { video_url, duration, deadline } = req.body;
+    const { video_url, duration, deadline, instructions } = req.body;
     const result = await db.query(
       `UPDATE lessons SET
         video_url = COALESCE($1, video_url),
         duration  = COALESCE($2, duration),
-        deadline  = COALESCE($3, deadline)
-       WHERE id = $4 RETURNING *`,
-      [video_url || null, duration || null, deadline || null, req.params.lessonId]
+        deadline  = COALESCE($3, deadline),
+        instructions = COALESCE($4, instructions)
+       WHERE id = $5 RETURNING *`,
+      [video_url || null, duration || null, deadline || null, instructions || null, req.params.lessonId]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(result.rows[0]);
