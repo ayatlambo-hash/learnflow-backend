@@ -25,6 +25,11 @@ async function initDB() {
     await db.query(`ALTER TABLE modules ADD COLUMN IF NOT EXISTS section VARCHAR(20) DEFAULT 'modules'`);
     // Add instructions column if missing (for task instructions)
     await db.query(`ALTER TABLE lessons ADD COLUMN IF NOT EXISTS instructions TEXT`);
+    // Add email_verified column if missing (for email verification)
+    await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE`);
+    await db.query(`ALTER TABLE email_verifications ADD COLUMN IF NOT EXISTS name VARCHAR(255)`);
+    await db.query(`ALTER TABLE email_verifications ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)`);
+    await db.query(`ALTER TABLE email_verifications ADD COLUMN IF NOT EXISTS role VARCHAR(20)`);
     console.log('✅ Database schema ready');
   } catch (err) {
     console.error('DB init error:', err.message);
