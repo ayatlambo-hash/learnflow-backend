@@ -27,40 +27,37 @@ npm run dev   # development with nodemon
 npm start     # production
 ```
 
-## Deployment (Render — free tier)
+## Deployment (Railway + PostgreSQL)
 
-### 1. Create free PostgreSQL database on Neon
-- Go to https://neon.tech and sign up
-- Create a new project → copy the connection string
-- The connection string looks like: `postgresql://user:password@host.neon.tech/learnflow?sslmode=require`
-
-### 2. Deploy backend on Render
-- Go to https://render.com and sign up
-- Click **New +** → **Web Service**
-- Connect your GitHub repo: `ayatlambo-hash/learnflow-backend`
-- Render will detect `render.yaml` and use these settings:
-  - **Name**: `learnflow-backend`
-  - **Runtime**: Node
-  - **Plan**: Free
-  - **Build Command**: `npm install`
-  - **Start Command**: `npm start`
-- Add environment variables in Render dashboard:
-  - `DATABASE_URL` = your Neon connection string
+### 1. Create Railway project and PostgreSQL
+- Go to https://railway.app and sign up
+- Click **New Project** → **Add PostgreSQL**
+- Railway will create a PostgreSQL database and set `DATABASE_URL` automatically
+- Add these environment variables in Railway dashboard:
   - `JWT_SECRET` = any long random string (min 32 chars)
   - `INSTRUCTOR_CODE` = `teacher2026`
+  - `PORT` = `5000` (optional, Railway sets its own port too)
+
+### 2. Deploy backend from GitHub
+- In your Railway project, click **Add Service** → **GitHub Repo**
+- Select `ayatlambo-hash/learnflow-backend`
+- Railway will use:
+  - **Build Command**: `npm install`
+  - **Start Command**: `npm start`
 - Click **Deploy**
-- After deployment, copy your Render URL (e.g. `https://learnflow-backend.onrender.com`)
+- After deployment, copy your Railway URL (e.g. `https://learnflow-backend.up.railway.app`)
 
 ### 3. Update frontend API URL
-- In your frontend repo, edit `src/api/client.js` or `.env.production`
-- Set `REACT_APP_API_URL=https://learnflow-backend.onrender.com/api`
+- In your frontend repo, edit `.env.production`
+- Set `REACT_APP_API_URL=https://your-railway-url.up.railway.app/api`
 - Commit and push → Netlify will redeploy automatically
 
-## Deployment (Railway)
-1. Create new Railway project
-2. Add PostgreSQL plugin → copy DATABASE_URL
-3. Set environment variables in Railway dashboard
-4. Deploy from GitHub
+## Deployment (Render + Neon — alternative)
+If you prefer Render:
+- Create a free PostgreSQL database on https://neon.tech
+- Deploy the backend on https://render.com as a Node web service
+- Set `DATABASE_URL`, `JWT_SECRET`, and `INSTRUCTOR_CODE=teacher2026`
+- Update frontend `.env.production` to your Render URL + `/api`
 
 ## API Endpoints
 - `POST /api/auth/register` — register user
