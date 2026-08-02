@@ -49,11 +49,11 @@ router.get('/coursenav', auth, async (req, res) => {
 // POST /api/modules - create module (instructor only)
 router.post('/', auth, instructorOnly, async (req, res) => {
   try {
-    const { title, description, color, icon, status } = req.body;
+    const { title, description, key_topics, color, icon, status } = req.body;
     if (!title) return res.status(400).json({ error: 'Title required' });
     const result = await db.query(
-      'INSERT INTO modules (title, description, color, icon, status, created_by) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-      [title, description || null, color || '#2563eb', icon || '📖', status || 'published', req.user.id]
+      'INSERT INTO modules (title, description, key_topics, color, icon, status, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+      [title, description || null, key_topics || null, color || '#2563eb', icon || '📖', status || 'published', req.user.id]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -65,10 +65,10 @@ router.post('/', auth, instructorOnly, async (req, res) => {
 // PUT /api/modules/:id - update module
 router.put('/:id', auth, instructorOnly, async (req, res) => {
   try {
-    const { title, description, color, icon, status } = req.body;
+    const { title, description, key_topics, color, icon, status } = req.body;
     const result = await db.query(
-      'UPDATE modules SET title=$1, description=$2, color=$3, icon=$4, status=$5 WHERE id=$6 RETURNING *',
-      [title, description, color, icon, status, req.params.id]
+      'UPDATE modules SET title=$1, description=$2, key_topics=$3, color=$4, icon=$5, status=$6 WHERE id=$7 RETURNING *',
+      [title, description, key_topics, color, icon, status, req.params.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(result.rows[0]);

@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS modules (
   id SERIAL PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
   description TEXT,
+  key_topics TEXT,
   color VARCHAR(20) DEFAULT '#2563eb',
   icon VARCHAR(10) DEFAULT '📖',
   status VARCHAR(20) DEFAULT 'published' CHECK (status IN ('draft', 'published')),

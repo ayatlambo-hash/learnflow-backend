@@ -23,6 +23,8 @@ async function initDB() {
     await db.query(schema);
     // Add section column if missing (for module tab separation)
     await db.query(`ALTER TABLE modules ADD COLUMN IF NOT EXISTS section VARCHAR(20) DEFAULT 'modules'`);
+    // Add key_topics column if missing (for module focus/key topics display)
+    await db.query(`ALTER TABLE modules ADD COLUMN IF NOT EXISTS key_topics TEXT`);
     // Add instructions column if missing (for task instructions)
     await db.query(`ALTER TABLE lessons ADD COLUMN IF NOT EXISTS instructions TEXT`);
     // Add email_verified column if missing (for email verification)
