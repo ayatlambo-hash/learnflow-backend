@@ -27,6 +27,13 @@ async function initDB() {
     await db.query(`ALTER TABLE modules ADD COLUMN IF NOT EXISTS key_topics TEXT`);
     // Add instructions column if missing (for task instructions)
     await db.query(`ALTER TABLE lessons ADD COLUMN IF NOT EXISTS instructions TEXT`);
+    // Add missing lesson columns if needed
+    await db.query(`ALTER TABLE lessons ADD COLUMN IF NOT EXISTS order_index INTEGER DEFAULT 0`);
+    await db.query(`ALTER TABLE lessons ADD COLUMN IF NOT EXISTS form_url TEXT`);
+    await db.query(`ALTER TABLE lessons ADD COLUMN IF NOT EXISTS content TEXT`);
+    await db.query(`ALTER TABLE lessons ADD COLUMN IF NOT EXISTS video_url TEXT`);
+    await db.query(`ALTER TABLE lessons ADD COLUMN IF NOT EXISTS duration VARCHAR(20)`);
+    await db.query(`ALTER TABLE lessons ADD COLUMN IF NOT EXISTS pages VARCHAR(20)`);
     // Add email_verified column if missing (for email verification)
     await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE`);
     await db.query(`ALTER TABLE email_verifications ADD COLUMN IF NOT EXISTS name VARCHAR(255)`);
