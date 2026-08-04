@@ -91,4 +91,41 @@ router.patch('/:id/pin', auth, instructorOnly, async (req, res) => {
   }
 });
 
+// PUT /api/forum/:id - edit own post (or instructor)
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const { title, body } = req.body;
+    if (!title?.trim()) return res.status(400).json({ error: 'Title required' });
+
+    const existing = await db.query('SELECT user_id FROM forum_posts WHERE id=$1', [req.params.id]);
+    if (existing.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    if (existing.rows[0].user_id !== req.user.id && req.user.role !== 'instructor') {
+      return res.status(403).json({ error: 'Not allowed' });
+    }
+
+    const result = await db.query(
+      'UPDATE forum_posts SET title=$1, body=$2 WHERE id=$3 RETURNING *',
+      [title.trim(), body?.trim() || null, req.params.id]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /api/forum/:id - delete own post (or instructor)
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const existing = await db.query('SELECT user_id FROM forum_posts WHERE id=$1', [req.params.id]);
+    if (existing.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    if (existing.rows[0].user_id !== req.user.id && req.user.role !== 'instructor') {
+      return res.status(403).json({ error: 'Not allowed' });
+    }
+    await db.query('DELETE FROM forum_posts WHERE id=$1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
