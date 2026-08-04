@@ -21,7 +21,7 @@ function generateCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// POST /api/auth/register — creates a pending registration and emails a code
+// POST /api/auth/register — creates the account immediately
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -33,17 +33,15 @@ router.post('/register', async (req, res) => {
     if (existing.rows.length > 0) return res.status(409).json({ error: 'Email already registered' });
 
     const hash = await bcrypt.hash(password, 12);
-    const code = generateCode();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-    await db.query('DELETE FROM email_verifications WHERE email = $1', [normalizedEmail]);
-    await db.query(
-      'INSERT INTO email_verifications (email, code, name, password_hash, role, expires_at) VALUES ($1, $2, $3, $4, $5, $6)',
-      [normalizedEmail, code, name.trim(), hash, validRole, expiresAt]
+    const color = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
+    const insertResult = await db.query(
+      'INSERT INTO users (name, email, password_hash, role, avatar_color, email_verified) VALUES ($1, $2, $3, $4, $5, TRUE) RETURNING id, name, email, role, avatar_color, created_at',
+      [name.trim(), normalizedEmail, hash, validRole, color]
     );
 
-    await sendVerificationEmail(normalizedEmail, code);
-
-    res.status(200).json({ message: 'Verification code sent', email: normalizedEmail });
+    const user = insertResult.rows[0];
+    const token = signToken(user);
+    res.status(201).json({ token, user });
   } catch (err) {
     console.error('Register error:', err);
     res.status(500).json({ error: 'Server error' });
