@@ -77,6 +77,21 @@ router.put('/:id', auth, instructorOnly, async (req, res) => {
   }
 });
 
+// PATCH /api/modules/:id/order - reorder module (instructor only)
+router.patch('/:id/order', auth, instructorOnly, async (req, res) => {
+  try {
+    const { order_index } = req.body;
+    const result = await db.query(
+      'UPDATE modules SET order_index=$1 WHERE id=$2 RETURNING *',
+      [order_index, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // DELETE /api/modules/:id
 router.delete('/:id', auth, instructorOnly, async (req, res) => {
   try {
@@ -135,6 +150,21 @@ router.put('/:id/lessons/:lessonId', auth, instructorOnly, async (req, res) => {
     const result = await db.query(
       'UPDATE lessons SET title=$1, type=$2, video_url=$3, form_url=$4, content=$5, duration=$6, pages=$7, deadline=$8, instructions=$9 WHERE id=$10 AND module_id=$11 RETURNING *',
       [title, type, video_url, form_url, content, duration, pages, deadline, instructions || null, req.params.lessonId, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PATCH /api/modules/:id/lessons/:lessonId/order - reorder lesson (instructor only)
+router.patch('/:id/lessons/:lessonId/order', auth, instructorOnly, async (req, res) => {
+  try {
+    const { order_index } = req.body;
+    const result = await db.query(
+      'UPDATE lessons SET order_index=$1 WHERE id=$2 AND module_id=$3 RETURNING *',
+      [order_index, req.params.lessonId, req.params.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(result.rows[0]);
