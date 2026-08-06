@@ -35,6 +35,22 @@ router.post('/', auth, instructorOnly, async (req, res) => {
   }
 });
 
+// PUT /api/announcements/:id - edit announcement (instructor only)
+router.put('/:id', auth, instructorOnly, async (req, res) => {
+  try {
+    const { title, body, type } = req.body;
+    if (!title?.trim()) return res.status(400).json({ error: 'Title required' });
+    const result = await db.query(
+      'UPDATE announcements SET title=$1, body=$2, type=$3 WHERE id=$4 RETURNING *',
+      [title.trim(), body?.trim() || null, type || 'info', req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // DELETE /api/announcements/:id
 router.delete('/:id', auth, instructorOnly, async (req, res) => {
   try {

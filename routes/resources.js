@@ -85,6 +85,22 @@ router.post('/link', auth, instructorOnly, async (req, res) => {
   }
 });
 
+// PUT /api/resources/:id - edit title/description/url (instructor only)
+router.put('/:id', auth, instructorOnly, async (req, res) => {
+  try {
+    const { title, description, url } = req.body;
+    if (!title?.trim()) return res.status(400).json({ error: 'Title required' });
+    const result = await db.query(
+      'UPDATE resources SET title=$1, description=$2, url=COALESCE($3, url) WHERE id=$4 RETURNING *',
+      [title.trim(), description?.trim() || null, url || null, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // DELETE /api/resources/:id
 router.delete('/:id', auth, instructorOnly, async (req, res) => {
   try {
