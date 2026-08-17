@@ -34,10 +34,14 @@ async function seed() {
 
     // Insert course modules
     const courseModules = [
-      { title: 'Module 1: Foundations of Professional Communication', description: 'Building the foundations of professional communication', icon: '📖', color: '#2563eb', section: 'modules', order_index: 1 },
-      { title: 'Module 2: Professional Register and Instructional Language', description: 'Understanding professional register and instructional language', icon: '📖', color: '#7c3aed', section: 'modules', order_index: 2 },
-      { title: 'Module 3: Digital Communication in the EFL Classroom', description: 'Digital communication tools and strategies for EFL teachers', icon: '📖', color: '#0891b2', section: 'modules', order_index: 3 },
-      { title: 'Module 4: Intercultural Communication (ICC) of EFL Teachers', description: 'Intercultural communication competence for EFL teachers', icon: '📖', color: '#16a34a', section: 'modules', order_index: 4 },
+      { title: 'Module 1: Foundations of Professional Communication', description: 'Building the foundations of professional communication', icon: '📖', color: '#2563eb', section: 'modules', order_index: 1,
+        key_topics: 'Weeks 1–2\n\nLearning goal: By the end of this module, pre-service EFL teachers will be able to explain the four components of professional communicative competence (Canale & Swain, 1980), identify their own current strengths and gaps through self-assessment, and demonstrate awareness of what professional-level communication looks like in a teaching context.' },
+      { title: 'Module 2: Professional Register and Instructional Language', description: 'Understanding professional register and instructional language', icon: '📖', color: '#7c3aed', section: 'modules', order_index: 2,
+        key_topics: 'Weeks 3–5\n\nLearning goal: Students will develop the ability to use appropriate professional register in a range of teaching contexts, construct clear and logically structured classroom instructions, apply concept-checking and instruction-checking questions (CCQs/ICQs), and give corrective feedback without causing loss of face.' },
+      { title: 'Module 3: Digital Communication in the EFL Classroom', description: 'Digital communication tools and strategies for EFL teachers', icon: '📖', color: '#0891b2', section: 'modules', order_index: 3,
+        key_topics: 'Weeks 6–7\n\nLearning goal: Students will develop digital language competence (DigCompEdu, Redecker 2017) by learning to communicate professionally in digital teaching environments — including LMS posts, synchronous video lessons, and AI-assisted communication — while maintaining the same four-component competence framework.' },
+      { title: 'Module 4: Intercultural Communication (ICC) of EFL Teachers', description: 'Intercultural communication competence for EFL teachers', icon: '📖', color: '#16a34a', section: 'modules', order_index: 4,
+        key_topics: 'Weeks 8–10\n\nLearning goal: Students will understand and apply Byram\'s (1997) model of Intercultural Communicative Competence, recognise cultural variables that affect professional communication, adapt their communicative strategies to diverse cultural contexts, and integrate all four components of communicative competence with intercultural sensitivity in complex professional scenarios.' },
     ];
 
     const allModules = [...navModules, ...courseModules];
@@ -45,8 +49,8 @@ async function seed() {
 
     for (const m of allModules) {
       const r = await client.query(
-        `INSERT INTO modules (title, description, icon, color, section, order_index, status) VALUES ($1,$2,$3,$4,$5,$6,'published') RETURNING id`,
-        [m.title, m.description, m.icon, m.color, m.section, m.order_index]
+        `INSERT INTO modules (title, description, icon, color, section, order_index, status, key_topics) VALUES ($1,$2,$3,$4,$5,$6,'published',$7) RETURNING id`,
+        [m.title, m.description, m.icon, m.color, m.section, m.order_index, m.key_topics || null]
       );
       moduleIds[m.title] = r.rows[0].id;
       console.log(`  ✅ Module: ${m.title} (id=${r.rows[0].id})`);

@@ -38,7 +38,7 @@ router.get('/', auth, async (req, res) => {
       query += ' WHERE r.module_id = $1';
       params.push(module_id);
     }
-    query += ' ORDER BY r.created_at DESC';
+    query += ' ORDER BY r.order_index ASC, r.created_at DESC';
     const result = await db.query(query, params);
     res.json(result.rows);
   } catch (err) {
@@ -59,9 +59,12 @@ router.post('/', auth, instructorOnly, upload.single('file'), async (req, res) =
       file_name = req.file.originalname;
     }
 
+    const count = await db.query('SELECT COALESCE(MAX(order_index), -1) + 1 as next FROM resources WHERE module_id = $1', [module_id || null]);
+    const order_index = count.rows[0].next || 0;
+
     const result = await db.query(
-      'INSERT INTO resources (module_id, title, type, file_path, file_name, description, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
-      [module_id || null, title, type || 'file', file_path, file_name, description || null, req.user.id]
+      'INSERT INTO resources (module_id, title, type, file_path, file_name, description, order_index, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
+      [module_id || null, title, type || 'file', file_path, file_name, description || null, order_index, req.user.id]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -75,9 +78,11 @@ router.post('/link', auth, instructorOnly, async (req, res) => {
   try {
     const { module_id, title, url, description, type } = req.body;
     if (!title || !url) return res.status(400).json({ error: 'Title and URL required' });
+    const count = await db.query('SELECT COALESCE(MAX(order_index), -1) + 1 as next FROM resources WHERE module_id = $1', [module_id || null]);
+    const order_index = count.rows[0].next || 0;
     const result = await db.query(
-      'INSERT INTO resources (module_id, title, type, url, description, created_by) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-      [module_id || null, title, type || 'link', url, description || null, req.user.id]
+      'INSERT INTO resources (module_id, title, type, url, description, order_index, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+      [module_id || null, title, type || 'link', url, description || null, order_index, req.user.id]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -93,6 +98,21 @@ router.put('/:id', auth, instructorOnly, async (req, res) => {
     const result = await db.query(
       'UPDATE resources SET title=$1, description=$2, url=COALESCE($3, url) WHERE id=$4 RETURNING *',
       [title.trim(), description?.trim() || null, url || null, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PATCH /api/resources/:id/order - reorder resource (instructor only)
+router.patch('/:id/order', auth, instructorOnly, async (req, res) => {
+  try {
+    const { order_index } = req.body;
+    const result = await db.query(
+      'UPDATE resources SET order_index=$1 WHERE id=$2 RETURNING *',
+      [order_index, req.params.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(result.rows[0]);

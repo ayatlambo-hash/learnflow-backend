@@ -29,6 +29,8 @@ async function initDB() {
     await db.query(`ALTER TABLE lessons ADD COLUMN IF NOT EXISTS instructions TEXT`);
     // Add missing lesson columns if needed
     await db.query(`ALTER TABLE lessons ADD COLUMN IF NOT EXISTS order_index INTEGER DEFAULT 0`);
+    // Add order_index to resources for reordering
+    await db.query(`ALTER TABLE resources ADD COLUMN IF NOT EXISTS order_index INTEGER DEFAULT 0`);
     await db.query(`ALTER TABLE lessons ADD COLUMN IF NOT EXISTS form_url TEXT`);
     await db.query(`ALTER TABLE lessons ADD COLUMN IF NOT EXISTS content TEXT`);
     await db.query(`ALTER TABLE lessons ADD COLUMN IF NOT EXISTS video_url TEXT`);

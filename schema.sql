@@ -94,6 +94,7 @@ CREATE TABLE IF NOT EXISTS resources (
   file_path VARCHAR(500),
   file_name VARCHAR(255),
   description TEXT,
+  order_index INTEGER DEFAULT 0,
   created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
