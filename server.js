@@ -41,6 +41,22 @@ async function initDB() {
     await db.query(`ALTER TABLE email_verifications ADD COLUMN IF NOT EXISTS name VARCHAR(255)`);
     await db.query(`ALTER TABLE email_verifications ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)`);
     await db.query(`ALTER TABLE email_verifications ADD COLUMN IF NOT EXISTS role VARCHAR(20)`);
+    // Allow 'audio' lesson type on existing databases
+    await db.query(`ALTER TABLE lessons DROP CONSTRAINT IF EXISTS lessons_type_check`);
+    await db.query(`ALTER TABLE lessons ADD CONSTRAINT lessons_type_check CHECK (type IN ('video','quiz','assignment','reading','audio'))`);
+    // Lesson materials table (instructor-attached files, separate from student submissions)
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS lesson_files (
+        id SERIAL PRIMARY KEY,
+        lesson_id INTEGER REFERENCES lessons(id) ON DELETE CASCADE,
+        file_name VARCHAR(255) NOT NULL,
+        file_path VARCHAR(500) NOT NULL,
+        mime_type VARCHAR(100),
+        uploaded_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_lesson_files_lesson ON lesson_files(lesson_id)`);
     console.log('✅ Database schema ready');
   } catch (err) {
     console.error('DB init error:', err.message);

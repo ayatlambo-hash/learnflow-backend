@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS lessons (
   id SERIAL PRIMARY KEY,
   module_id INTEGER REFERENCES modules(id) ON DELETE CASCADE,
   title VARCHAR(255) NOT NULL,
-  type VARCHAR(20) NOT NULL DEFAULT 'video' CHECK (type IN ('video', 'quiz', 'assignment', 'reading')),
+  type VARCHAR(20) NOT NULL DEFAULT 'video' CHECK (type IN ('video', 'quiz', 'assignment', 'reading', 'audio')),
   video_url TEXT,
   form_url TEXT,
   content TEXT,
@@ -54,6 +54,17 @@ CREATE TABLE IF NOT EXISTS lessons (
   deadline DATE,
   instructions TEXT,
   order_index INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Lesson materials (instructor-attached files: PDFs, MP3s, etc — separate from student submissions)
+CREATE TABLE IF NOT EXISTS lesson_files (
+  id SERIAL PRIMARY KEY,
+  lesson_id INTEGER REFERENCES lessons(id) ON DELETE CASCADE,
+  file_name VARCHAR(255) NOT NULL,
+  file_path VARCHAR(500) NOT NULL,
+  mime_type VARCHAR(100),
+  uploaded_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

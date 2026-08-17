@@ -1,8 +1,27 @@
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const db = require('../db');
 const { auth, instructorOnly } = require('../middleware/auth');
 
 const router = express.Router();
+
+const materialsDir = path.join(__dirname, '../uploads/lesson-materials');
+if (!fs.existsSync(materialsDir)) fs.mkdirSync(materialsDir, { recursive: true });
+
+const materialsStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, materialsDir),
+  filename: (req, file, cb) => {
+    const unique = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+    cb(null, `${unique}-${file.originalname}`);
+  },
+});
+
+const uploadMaterial = multer({
+  storage: materialsStorage,
+  limits: { fileSize: 200 * 1024 * 1024 },
+});
 
 // GET /api/modules - list all modules with progress for student
 router.get('/', auth, async (req, res) => {
@@ -230,6 +249,57 @@ router.post('/progress/:lessonId', auth, async (req, res) => {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
+});
+
+// POST /api/modules/lessons/:lessonId/materials - instructor attaches file(s) to a lesson (PDF, MP3, etc)
+router.post('/lessons/:lessonId/materials', auth, instructorOnly, uploadMaterial.array('files', 10), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'No files uploaded' });
+    const inserted = [];
+    for (const file of req.files) {
+      const result = await db.query(
+        'INSERT INTO lesson_files (lesson_id, file_name, file_path, mime_type, uploaded_by) VALUES ($1,$2,$3,$4,$5) RETURNING *',
+        [req.params.lessonId, file.originalname, file.filename, file.mimetype, req.user.id]
+      );
+      inserted.push(result.rows[0]);
+    }
+    res.status(201).json(inserted);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Upload failed' });
+  }
+});
+
+// GET /api/modules/lessons/:lessonId/materials - list attached files (any authenticated role)
+router.get('/lessons/:lessonId/materials', auth, async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM lesson_files WHERE lesson_id=$1 ORDER BY created_at ASC', [req.params.lessonId]);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /api/modules/lessons/materials/:fileId - instructor removes an attached file
+router.delete('/lessons/materials/:fileId', auth, instructorOnly, async (req, res) => {
+  try {
+    const r = await db.query('SELECT file_path FROM lesson_files WHERE id=$1', [req.params.fileId]);
+    if (r.rows[0]?.file_path) {
+      const fp = path.join(materialsDir, r.rows[0].file_path);
+      if (fs.existsSync(fp)) fs.unlinkSync(fp);
+    }
+    await db.query('DELETE FROM lesson_files WHERE id=$1', [req.params.fileId]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /api/modules/lessons/materials/file/:filename - serve attached file (downloadable)
+router.get('/lessons/materials/file/:filename', auth, (req, res) => {
+  const filePath = path.join(materialsDir, req.params.filename);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+  res.sendFile(filePath);
 });
 
 module.exports = router;
