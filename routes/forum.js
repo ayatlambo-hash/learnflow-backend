@@ -13,7 +13,7 @@ router.get('/', auth, async (req, res) => {
               (SELECT COUNT(*) FROM forum_replies WHERE post_id = fp.id) as reply_count
        FROM forum_posts fp
        JOIN users u ON u.id = fp.user_id
-       ORDER BY fp.pinned DESC, fp.created_at DESC`
+       ORDER BY fp.pinned DESC, fp.created_at ASC`
     );
     res.json(result.rows);
   } catch (err) {
