@@ -57,6 +57,8 @@ async function initDB() {
       )
     `);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_lesson_files_lesson ON lesson_files(lesson_id)`);
+    // Temporary order fix for Course Navigation Introductory Video
+    await db.query(`UPDATE modules SET order_index = -1 WHERE title ILIKE '%introductory%' AND section = 'nav'`);
     console.log('✅ Database schema ready');
   } catch (err) {
     console.error('DB init error:', err.message);
